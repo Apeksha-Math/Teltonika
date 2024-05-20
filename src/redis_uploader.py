@@ -3,7 +3,7 @@ import configparser
 from logger import Logger
 
 class RedisUploader:
-    def __init__(self, config_file='D:\\Apeksha\\APRIL\\14-05-24\\Teltonika_socket_pgm\\src\\config.ini'):
+    def __init__(self, config_file='config.ini'):
         self.logging = Logger()
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
