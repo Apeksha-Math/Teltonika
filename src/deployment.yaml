@@ -1,0 +1,80 @@
+# PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: teltonika-logs-pv
+  namespace: teltonika-stag
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/mcdev/Teltonika_logs"  # Replace with the actual path on your master node
+---
+# PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs-pvc
+  namespace: teltonika-stag
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ""  # Use the default storage class
+  volumeName: teltonika-logs-pv  # Manually bind to the specified PV
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teltonika-socket-deployment
+  namespace: teltonika-stag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teltonika-socket
+  template:
+    metadata:
+      labels:
+        app: teltonika-socket
+    spec:
+      containers:
+      - name: teltonika-socket-container
+        image: 9989228601/teltonika-socket:1
+        ports:
+        - containerPort: 9010
+        volumeMounts:
+        - name: logs-volume
+          mountPath: /usr/src/app/logs
+      volumes:
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: logs-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 30
+  revisionHistoryLimit: 3
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: teltonika-socket-service
+  namespace: teltonika-stag
+spec:
+  selector:
+    app: teltonika-socket
+  ports:
+    - protocol: TCP
+      port: 9011
+      targetPort: 9010
+  type: NodePort
