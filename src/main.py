@@ -24,32 +24,34 @@ class Server:
     async def handle_client(self, client_socket):
         try:
             while True:
-                data = await asyncio.to_thread(client_socket.recv, 2048)
-                data = data.strip()
-                if not data:
-                    break
+                try:
+                    data = await asyncio.to_thread(client_socket.recv, 2048)
+                    if not data:
+                        print("No data received, sleeping for 1 minute.")
+                        await asyncio.sleep(60)  # Sleep for 1 minute if no data is received
+                        continue
 
-                acknowledgment = b'\x01'
-                await asyncio.to_thread(client_socket.sendall, acknowledgment)
-                inserted_time = datetime.datetime.now()
-                hex_data = data.hex()
-                print(hex_data)
+                    acknowledgment = b'\x01'
+                    await asyncio.to_thread(client_socket.sendall, acknowledgment)
+                    inserted_time = datetime.datetime.now()
+                    hex_data = data.hex()
+                    print(f"Received data: {hex_data}")
 
-                self.redis_uploader.upload_record("Teltonika", hex_data)
-                self.logger.log("RawData", f"RawData: {hex_data}", log_level="INFO")
+                    self.redis_uploader.upload_record("Teltonika", hex_data)
+                    self.logger.log("RawData", f"RawData: {hex_data}", log_level="INFO")
+
+                except BlockingIOError:
+                    await asyncio.sleep(0.1)  # Give time for the socket to be ready again
 
         except Exception as e:
             self.logger.log("HandleClientError", f"Error handling Device: {e}", log_level="INFO")
-
-        finally:
-            with self.lock:
-                self.clients = [client_info for client_info in self.clients if client_info[0] != client_socket]
-                client_socket.close()
+            print(f"Error: {e}")
 
     async def client_acceptance(self):
         loop = asyncio.get_event_loop()
         while True:
             client_socket, client_address = await loop.sock_accept(self.server_socket)
+            print(f"Accepted connection from {client_address}")
             with self.lock:
                 self.clients.append((client_socket, client_address))
                 asyncio.create_task(self.handle_client(client_socket))
