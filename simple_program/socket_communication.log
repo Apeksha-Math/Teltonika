@@ -1,0 +1,11 @@
+2024-07-18 17:47:53,285 - ERROR - Socket error: [WinError 10061] No connection could be made because the target machine actively refused it
+2024-07-18 17:48:26,804 - INFO - Sent: hello
+2024-07-18 17:48:26,804 - INFO - Received: hello
+2024-07-18 17:48:44,125 - INFO - Sent: hello
+how are you?
+2024-07-18 17:48:44,125 - INFO - Received: hello
+how are you?
+2024-07-18 17:48:46,613 - INFO - Sent: hello
+how are you?
+2024-07-18 17:48:46,613 - INFO - Received: hello
+how are you?
