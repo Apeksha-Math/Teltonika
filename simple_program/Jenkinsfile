@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout code from Git repository
-                git 'https://github.com/your/repository.git'
+                git branch: 'Socket_pgm', url: 'https://github.com/Apeksha-Math/Teltonika.git'
             }
         }
         
